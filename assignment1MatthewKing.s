@@ -1,4 +1,10 @@
 # PROGRAM: ASSIGNMENT 1
+# Variables:
+# ----------
+# $s0 Cumulative Sum - cumulativeSum
+# $s1 Exponent - exponent
+# $s2 Current digit - curDigit
+################################################################
 	.data #Data declaration component
 	userInput:
 		.space 8 #8 bytes, 1 byte per possible character; Space is maximum size
@@ -8,6 +14,12 @@
 	
 	space:
 		.asciiz " "
+		
+	inputPrompt:
+		.asciiz "Please enter a hexadecimal number:\n"
+		
+	outputStatement:
+		.asciiz "Decimal value: "
 	
 	.text #Assembly instructions component
 main: #Start of code
@@ -39,9 +51,13 @@ main: #Start of code
 	li $v0, 4 #Output String code loaded
 	syscall	#Output string
 	
-	la $a0, userInput #Set source for output string
+output:
+	la $a0, outputStatement #Set output source to outputStatement
 	li $v0, 4 #Output String code loaded
 	syscall	#Output string
+	add $a0, $s0, $zero #Set output source to cumulativeSum
+	li $v0, 1 #Output Integer code loaded
+	syscall	#Output integer
 
 exit:
 	li $v0, 10 #Exit code loaded
