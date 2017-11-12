@@ -1,9 +1,16 @@
 # PROGRAM: ASSIGNMENT 1
 # Variables:
 # ----------
+# MAIN
 # $s0 Cumulative Sum - cumulativeSum
 # $s1 Exponent - exponent
-# $s2 Current digit - curDigit
+#
+# 
+# CHECKDATA
+# $t0 Current digit address - curAdd
+# $t1 Current digit - curDigit
+# $t2 Digit counter - digitCount
+# $t3 Invalid number flag - invalFlag
 ################################################################
 	.data #Data declaration component
 	userInput:
@@ -23,34 +30,17 @@
 	
 	.text #Assembly instructions component
 main: #Start of code
-
+	#variables intialized
+	li $s0, 0 #cumulativeSum = 0
+	li $s1, 0 #exponent = 0
+	li $s2, 0 #curDigit = 0
+	
+input:
 	li $a1, 10 #Specify max size for read string
 	la $a0, userInput #Set destination for read string
 	li $v0, 8 #Read String code loaded
 	syscall #Read string from user
-	
-	la $t0, userInput
-	lb $t1, 0($t0)
-	add $a0, $t1, $zero
-	li $v0, 11 #Output character code loaded
-	syscall
-	
-	la $t0, space
-	lb $t1, 0($t0)
-	add $a0, $t1, $zero
-	li $v0, 11 #Output character code loaded
-	syscall	#Output string
-	
-	la $t0, userInput
-	lb $t1, 7($t0)
-	add $a0, $t1, $zero
-	li $v0, 11 #Output character code loaded
-	syscall	#Output string
-	
-	la $a0, newLine #Set source for output string
-	li $v0, 4 #Output String code loaded
-	syscall	#Output string
-	
+#	jal CheckData #Verifies if userInput is a valid HEX value
 output:
 	la $a0, outputStatement #Set output source to outputStatement
 	li $v0, 4 #Output String code loaded
@@ -58,7 +48,14 @@ output:
 	add $a0, $s0, $zero #Set output source to cumulativeSum
 	li $v0, 1 #Output Integer code loaded
 	syscall	#Output integer
-
 exit:
 	li $v0, 10 #Exit code loaded
 	syscall	#Exit program
+	
+checkData:
+	la $t0, userInput #sets digit address to leftmost slot
+	checkDataLoop:
+		
+		addi $t0, $t0, 1 #shifts attention to next digit
+		lb $t1, 0($t0) #loads new digit 
+	jr $ra
