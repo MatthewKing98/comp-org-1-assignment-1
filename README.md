@@ -20,3 +20,13 @@ START
 	5.2 Return CumulativeSum
 ELSE
 	Repeat 3
+
+	
+Thoughts
+--------
+String stores contents as 1 byte = 1 character
+Characters are represented through ascii/unicode
+To identify if a character is valid, compare the character in question to decimal values greater than or less than the allowed range.
+Cycle for each character.
+Must accound for values < 8 characters long
+(FIND OUT WHAT SPACE LOOKS LIKE INITIALLY OR INITIALIZE SPACE SO YOU HAVE A SAFETYVALUE MAYBE ALL 00000000
