@@ -29,4 +29,48 @@ Characters are represented through ascii/unicode
 To identify if a character is valid, compare the character in question to decimal values greater than or less than the allowed range.
 Cycle for each character.
 Must accound for values < 8 characters long
-(FIND OUT WHAT SPACE LOOKS LIKE INITIALLY OR INITIALIZE SPACE SO YOU HAVE A SAFETYVALUE MAYBE ALL 00000000
+Values shorter than 8 are left-aligned meaning you will have to make exponent inc. only when it meets a non-NULL value (AKA)
+
+
+VALIDITY CHECK CODE
+if(curDigit != NULL)
+	if(curDigit > 47) //is at least 0
+	{
+		if(58 > curDigit) //is at most 9
+		{
+			invalFlag = False
+		}
+		else
+		{
+			if(curDigit > 64) //is at least A
+			{
+				if(71 > curDigit)//at most F
+				{
+					invalFlag = False
+				}
+				if(curDigit > 97) least a
+				{
+					if(123 > curDigit)//at most z
+					{
+						invalFlag = False
+					}
+					else
+					{
+						invalFlag = True
+					}
+				}
+				else
+				{
+					invalFlag = True
+				}
+			}
+			else
+			{
+				invalFlag = True
+			}
+		}
+	}
+	else
+	{
+		invalFlag = True
+	}
