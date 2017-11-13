@@ -33,7 +33,9 @@ Values shorter than 8 are left-aligned meaning you will have to make exponent in
 
 STRING ENDS WITH 10 SINCE 10 = NULL
 
-CURRENT VERSION DOES NOT WORK FOR NUMBERS ABOVE 7FFFFFFF
+CURRENT VERSION DOES NOT WORK FOR NUMBERS ABOVE 80000000
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+Issue occurring because integers are read as 2s compliment, and 80000000 translates to 1000 0000 0000 0000 0000 0000 0000 0000 in a 32 bit register, giving a negative value
 
 VALIDITY CHECK CODE
 if(curDigit > NULL)
@@ -95,6 +97,16 @@ AddDecimalToSum:
 		exponent -= 1
 		digitCount -= 1
 	}
+	
+ConvertToString:
+	resultString = ""
+	decimal = 79822
+	do
+	{
+		decimal /= 10
+		result.addToEnd(div.remainder)
+		decimal = div.quotient
+	}while(decimal != 0)
 ----------------------------------------
 CalcuateDecimal:
 	add $t0, $a0, $zero #sets digit address to leftmost slot
