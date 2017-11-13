@@ -190,17 +190,25 @@ CalcuateDecimal:
 				addi $t3, $t3, 1 #increment exponent counter
 				j multiplierLoop
 			multiplierLoopEnd:
+			translateCharToInt:
+				li $t8, 58 #set curLim to "9" + 1
+				slt $t8, $t8, $t1  #return 1 if "9" is less than digit
+				bne $t8, $zero, notDigit
+				addi $t1, $t1, -48 #lower value so that "0" = 0
+				j applyMultiplier
+				notDigit:
+					li $t8, 71 #set curLim to "F" + 1
+					slt $t8, $t8, $t1 #return 1 if "9" is less than digit
+					bne $t8, $zero, notUpper
+					addi $t1, $t1, -55 #lower value so that "A" = 10
+				j applyMultiplier
+				notUpper:
+					li $t8, 103 #set curLim to "f" + 1
+					slt $t8, $t8, $t1 #return 1 if "9" is less than digit
+					addi $t1, $t1, -87 #lower value so that "a" = 10
+			applyMultiplier:
 				mult $t4, $t1 #multiplier * digit value
 				mflo $t6 #loads result of multiplier * digit value
-				
-				
-					la $a0, newLine #Set output source to newLine
-					li $v0, 4 #Output String code loaded
-					syscall	#Output string
-					add $a0, $t4, $zero #Set output source to newLine
-					li $v0, 1 #Output String code loaded
-					syscall	#Output string
-				
 				add $t7, $t7, $t6 #adds digit decimal value to cumulativeSum
 				addi $t5, $t5, -1 #lowers expMax ceiling
 				li $t8, -1 #loads lowest expMax case
