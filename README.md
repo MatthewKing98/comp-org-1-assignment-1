@@ -107,6 +107,7 @@ ConvertToString:
 		result.addToEnd(div.remainder)
 		decimal = div.quotient
 	}while(decimal != 0)
+	
 ----------------------------------------
 CalcuateDecimal:
 	add $t0, $a0, $zero #sets digit address to leftmost slot
