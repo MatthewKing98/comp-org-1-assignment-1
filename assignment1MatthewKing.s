@@ -153,22 +153,21 @@ CheckData:
 # $t0 Current digit address - curAdd
 # $t1 Current digit - curDigit
 # $t2 Digit counter - digitCount
-# $t3 Current digit invalid flag - digiInvalFlag
+# $t3 
 # $t4 Invalid number flag - invalFlag
 # $t5 Current ascii limit - curLim
 # $v0 $t3, Invalid number flag - returnVar1		
 
 CalcuateDecimal:
 	add $t0, $a0, $zero #sets digit address to leftmost slot
-	
 	li $t2, 0 #initializes digit counter to zero
 	totalDigitsLoop:
 		lb $t1, 0($t0) #loads new digit 
-		beq $t1, $s0, calculateLoop #If the value is null
-		beq $t2, $s1, calculateLoop #If counter = max string size
+		beq $t1, $s0, AddDecimalToSum #If the value is null
+		beq $t2, $s1, AddDecimalToSum #If counter = max string size
 		addi $t0, $t0, 1 #shifts attention to next digit
 		addi $t2, $t2, 1 #increment digit counter
 		j totalDigitsLoop
-	calculateLoop:
+	AddDecimalToSum:
 		
 	jr $ra #end of function
