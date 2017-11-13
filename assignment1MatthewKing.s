@@ -5,8 +5,10 @@
 # $s0 CONST End of string - NULL
 # $s1 CONST Maximum size of string - STRSIZE
 # $s2 
-# $s6 Cumulative sum - cumulativeSum
-# $s7 Exponent - exponent
+# $t0 Cumulative sum - cumulativeSum
+# $t1 Exponent - exponent
+#
+#
 # 
 # CHECKDATA
 # $a0 Starting address of string - argument1
@@ -30,6 +32,9 @@
 		
 	inputPrompt:
 		.asciiz "Please enter a hexadecimal number:\n"
+	
+	inputErrorText:
+		.asciiz "\n\nInvalid entry [0-9,A-F, or a-f ONLY]\n\n"
 		
 	outputStatement:
 		.asciiz "Decimal value: "
@@ -39,10 +44,11 @@ main: #Start of code
 	#variables intialized
 	li $s0, 10 #CONST NULL = 10
 	li $s1, 8 #CONST STRSIZE = 8
-	li $s6, 0 #cumulativeSum = 0
-	li $s7, 0 #exponent = 0
 	
 input:
+	la $a0, inputPrompt #Set output source to newLine
+	li $v0, 4 #Output String code loaded
+	syscall	#Output string
 	li $a1, 10 #Specify max size for read string
 	la $a0, userInput #Set destination for read string
 	li $v0, 8 #Read String code loaded
@@ -50,6 +56,10 @@ input:
 	
 validityCheck:
 	jal CheckData #Verifies if userInput is a valid HEX value
+	bne $v0, $zero, inputError
+	
+	li $t0, 0 #cumulativeSum = 0
+	li $t1, 0 #exponent = 0
 	add $a0, $v0, $zero #tests function result
 	li $v0, 1 #Output Integer code loaded
 	syscall	#Output integer
@@ -61,13 +71,19 @@ output:
 	la $a0, outputStatement #Set output source to outputStatement
 	li $v0, 4 #Output String code loaded
 	syscall	#Output string
-	add $a0, $s6, $zero #Set output source to cumulativeSum
+	add $a0, $t0, $zero #Set output source to cumulativeSum
 	li $v0, 1 #Output Integer code loaded
 	syscall	#Output integer
 	
 exit:
 	li $v0, 10 #Exit code loaded
 	syscall	#Exit program
+	
+inputError:
+	la $a0, inputErrorText #Set output source to newLine
+	li $v0, 4 #Output String code loaded
+	syscall	#Output string
+	j input
 
 # CHECKDATA
 # $a0 Starting address of string - argument1
@@ -88,13 +104,6 @@ CheckData:
 		lb $t1, 0($t0) #loads new digit 
 		beq $t1, $s0, CheckDataEnd #If the value is End-of-String, exit loop
 		ifNotNull: #if(curDigit != NULL)
-		
-			add $a0, $t1, $zero #Set output source to cumulativeSum
-			li $v0, 1 #Output Integer code loaded
-			syscall	#Output integer
-			la $a0, space #Set output source to space
-			li $v0, 4 #Output String code loaded
-			syscall	#Output string
 			numberTest:
 				li $t5, 47 #set curLim to "0" - 1
 				slt $t3, $t1, $t5 #return 1 if digit is less than "0"
@@ -118,9 +127,9 @@ CheckData:
 				li $t5, 102 #set curLim to "f"
 				slt $t3, $t5, $t1 #return 1 if "F" is less than digit
 				beq $t3, $zero, AddToInvalFlag
-			
 	AddToInvalFlag:
-		or $t4, $t3, $t4
+		or $t4, $t3, $t4 #updates overall flag based on current digit check
+		bne $t4, $zero, CheckDataEnd #ends loop early if invalid number is found
 		addi $t0, $t0, 1 #shifts attention to next digit
 		addi $t2, $t2, 1 #increment digit counter
 		bne $s1, $t2, checkDataLoop #while digitCount != STRSIZE
