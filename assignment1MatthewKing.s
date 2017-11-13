@@ -15,6 +15,7 @@
 # $t2 Digit counter - digitCount
 # $t3 Current digit invalid flag - digiInvalFlag
 # $t4 Invalid number flag - invalFlag
+# $t5 Current ascii limit - curLim
 # $v0 $t3, Invalid number flag - returnVar1
 ################################################################
 	.data #Data declaration component
@@ -54,6 +55,9 @@ validityCheck:
 	syscall	#Output integer
 	
 output:
+	la $a0, newLine #Set output source to newLine
+	li $v0, 4 #Output String code loaded
+	syscall	#Output string
 	la $a0, outputStatement #Set output source to outputStatement
 	li $v0, 4 #Output String code loaded
 	syscall	#Output string
@@ -72,6 +76,7 @@ exit:
 # $t2 Digit counter - digitCount
 # $t3 Current digit invalid flag - digiInvalFlag
 # $t4 Invalid number flag - invalFlag
+# $t5 Current ascii limit - curLim
 # $v0 $t3, Invalid number flag - returnVar1
 	
 CheckData:
@@ -81,20 +86,32 @@ CheckData:
 	li $t3, 0 #initializes digiInvalFlag to zero
 	checkDataLoop:
 		lb $t1, 0($t0) #loads new digit 
-		beq $t1, $s0, CheckDataEnd
-		
-		add $a0, $t1, $zero #Set output source to cumulativeSum
-		li $v0, 1 #Output Integer code loaded
-		syscall	#Output integer
-		la $a0, space #Set output source to space
-		li $v0, 4 #Output String code loaded
-		syscall	#Output string
-		
-		beq $zero, $t3, orSkip
-		
+		beq $t1, $s0, CheckDataEnd #If the value is End-of-String, exit loop
 		ifNotNull: #if(curDigit != NULL)
-			slti $t3, $t1, 47
-	orSkip:
+		
+			add $a0, $t1, $zero #Set output source to cumulativeSum
+			li $v0, 1 #Output Integer code loaded
+			syscall	#Output integer
+			la $a0, space #Set output source to space
+			li $v0, 4 #Output String code loaded
+			syscall	#Output string
+			numberTest:
+				li $t5, 47 #set curLim to "0"
+				slt $t3, $t1, $t5 #return 1 if digit is less than "0"
+				bne $t3, $zero, AddToInvalFlag
+				li $t5, 58 #set curLim to "9"
+				slt $t3, $t5, $t1 #return 1 if "9" is less than digit
+				beq $t3, $zero, AddToInvalFlag #digit is between "0" and "9"
+			
+			lowerCaseTest:
+				li $t5, 64 #set curLim to "A"
+				slt $t3, $t1, $t5 #return 1 if digit is less than "A"
+				bne $t3, $zero, AddToInvalFlag
+				li $t5, 71 #set curLim to "F"
+				slt $t3, $t5, $t1 #return 1 if "F" is less than digit
+				beq $t3, $zero, AddToInvalFlag
+			
+	AddToInvalFlag:
 		or $t4, $t3, $t4
 		addi $t0, $t0, 1 #shifts attention to next digit
 		addi $t2, $t2, 1 #increment digit counter
