@@ -57,12 +57,12 @@ input:
 validityCheck:
 	jal CheckData #Verifies if userInput is a valid HEX value
 	bne $v0, $zero, inputError
-	
+
+decimalConversion:
+	la $a0, userInput
+	jal CalcuateDecimal
 	li $t0, 0 #cumulativeSum = 0
 	li $t1, 0 #exponent = 0
-	add $a0, $v0, $zero #tests function result
-	li $v0, 1 #Output Integer code loaded
-	syscall	#Output integer
 	
 output:
 	la $a0, newLine #Set output source to newLine
@@ -104,6 +104,12 @@ CheckData:
 		lb $t1, 0($t0) #loads new digit 
 		beq $t1, $s0, CheckDataEnd #If the value is End-of-String, exit loop
 		ifNotNull: #if(curDigit != NULL)
+			la $a0, space #Set output source to newLine
+			li $v0, 4 #Output String code loaded
+			syscall	#Output string
+			add $a0, $t1, $zero
+			li $v0, 1 #Output Integer code loaded
+			syscall	#Output integer
 			numberTest:
 				li $t5, 47 #set curLim to "0" - 1
 				slt $t3, $t1, $t5 #return 1 if digit is less than "0"
@@ -141,3 +147,28 @@ CheckData:
 	CheckDataEnd:	
 		add $v0, $t4, $zero #load status into return value, v0
 		jr $ra #end of function
+
+# CHECKDATA
+# $a0 Starting address of string - argument1
+# $t0 Current digit address - curAdd
+# $t1 Current digit - curDigit
+# $t2 Digit counter - digitCount
+# $t3 Current digit invalid flag - digiInvalFlag
+# $t4 Invalid number flag - invalFlag
+# $t5 Current ascii limit - curLim
+# $v0 $t3, Invalid number flag - returnVar1		
+
+CalcuateDecimal:
+	add $t0, $a0, $zero #sets digit address to leftmost slot
+	
+	li $t2, 0 #initializes digit counter to zero
+	totalDigitsLoop:
+		lb $t1, 0($t0) #loads new digit 
+		beq $t1, $s0, calculateLoop #If the value is null
+		beq $t2, $s1, calculateLoop #If counter = max string size
+		addi $t0, $t0, 1 #shifts attention to next digit
+		addi $t2, $t2, 1 #increment digit counter
+		j totalDigitsLoop
+	calculateLoop:
+		
+	jr $ra #end of function
