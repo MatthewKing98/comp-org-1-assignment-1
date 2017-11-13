@@ -4,7 +4,7 @@
 # MAIN
 # $s0 CONST End of string - NULL
 # $s1 CONST Maximum size of string - STRSIZE
-# $s2 
+# $s2 CONST Input Base - INBASE 
 # $t0 Cumulative sum - cumulativeSum
 # $t1 Exponent - exponent
 #
@@ -153,9 +153,11 @@ CheckData:
 # $t0 Current digit address - curAdd
 # $t1 Current digit - curDigit
 # $t2 Digit counter - digitCount
-# $t3 
-# $t4 Invalid number flag - invalFlag
-# $t5 Current ascii limit - curLim
+# $t3 Exponent progress tracker - expCounter
+# $t4 Multiplier - multiplier
+# $t5 Exponent - exponent
+# $t6 Digit decimal value - digiVal
+# $t7 Cumulative sum -cumulativeSum
 # $v0 $t3, Invalid number flag - returnVar1		
 
 CalcuateDecimal:
@@ -169,5 +171,27 @@ CalcuateDecimal:
 		addi $t2, $t2, 1 #increment digit counter
 		j totalDigitsLoop
 	AddDecimalToSum:
-		
+		decimalToSumLoop:
+			li $t3, 0 #expCounter = 0
+			li $t4, 1 #multiplier = 1
+			li $t7, 0 #cumulativeSum = 0
+			add $t5, $t2, $zero
+			sub $t0, $t0, $t5
+			addi $t5, $t5, -1 #exponent = size-of-string - 1
+			multiplierLoop:
+				beq $t3, t5, multiplierLoopEnd
+				mult $t4, $s2 #raise 16 by 1 power
+				mflo $t4 #load result of previous multiplication
+				addi $t3, $t3, 1 #increment expCounter
+				j multiplierLoop #repeat loop
+			multiplierLoopEnd:
+				mult $t4, $t1 #multiplier * curDigit
+				mflo $t6
+				add $t7, $t7, $t6
+				addi $t5, $t5, -1
+				addi $t3, $t3, 1
+				bne $t2, $zero, decimalToSumLoop
+		decimalToSumLoopEnd:
+			
+			
 	jr $ra #end of function
