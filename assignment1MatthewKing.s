@@ -61,8 +61,7 @@ validityCheck:
 decimalConversion:
 	la $a0, userInput
 	jal CalcuateDecimal
-	li $t0, 0 #cumulativeSum = 0
-	li $t1, 0 #exponent = 0
+	add $t0, $v0, $zero
 	
 output:
 	la $a0, newLine #Set output source to newLine
@@ -155,7 +154,7 @@ CheckData:
 # $t2 Digit counter - digitCount
 # $t3 Exponent progress tracker - expCounter
 # $t4 Multiplier - multiplier
-# $t5 Exponent - exponent
+# $t5 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 # $t6 Digit decimal value - digiVal
 # $t7 Cumulative sum -cumulativeSum
 # $v0 $t3, Invalid number flag - returnVar1		
@@ -163,35 +162,27 @@ CheckData:
 CalcuateDecimal:
 	add $t0, $a0, $zero #sets digit address to leftmost slot
 	li $t2, 0 #initializes digit counter to zero
+	
 	totalDigitsLoop:
 		lb $t1, 0($t0) #loads new digit 
-		beq $t1, $s0, AddDecimalToSum #If the value is null
-		beq $t2, $s1, AddDecimalToSum #If counter = max string size
+		beq $t1, $s0, totalDigitsLoopEnd #If the value is null
+		beq $t2, $s1, totalDigitsLoopEnd #If counter = max string size
 		addi $t0, $t0, 1 #shifts attention to next digit
 		addi $t2, $t2, 1 #increment digit counter
 		j totalDigitsLoop
-	AddDecimalToSum:
-		decimalToSumLoop:
+	
+	totalDigitsLoopEnd:
+		sub	$t0, $t0, $t2 #resets pointer to start of string
+		lb $t1, 0($t0) #loads new digit; loads 10 if empty string
+	
+		li $t7, 0 #cumulativeSum = 0
+		addi $t3, $t2, -1 #starts expCounter at maximum exponent (n-1)
+		beq $t1, $s0, addDecimalDigitsLoopEnd #skips process and returns 0 if input is empty string
+		addDecimalDigitsLoop:
 			li $t3, 0 #expCounter = 0
 			li $t4, 1 #multiplier = 1
-			li $t7, 0 #cumulativeSum = 0
-			add $t5, $t2, $zero
-			sub $t0, $t0, $t5
-			addi $t5, $t5, -1 #exponent = size-of-string - 1
-			multiplierLoop:
-				beq $t3, t5, multiplierLoopEnd
-				mult $t4, $s2 #raise 16 by 1 power
-				mflo $t4 #load result of previous multiplication
-				addi $t3, $t3, 1 #increment expCounter
-				j multiplierLoop #repeat loop
-			multiplierLoopEnd:
-				mult $t4, $t1 #multiplier * curDigit
-				mflo $t6
-				add $t7, $t7, $t6
-				addi $t5, $t5, -1
-				addi $t3, $t3, 1
-				bne $t2, $zero, decimalToSumLoop
-		decimalToSumLoopEnd:
 			
 			
-	jr $ra #end of function
+		addDecimalDigitsLoopEnd:
+			add $v0, $t7, $zero
+			jr $ra #end of function
