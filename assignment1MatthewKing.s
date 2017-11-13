@@ -4,9 +4,10 @@
 # MAIN
 # $s0 CONST End of string - NULL
 # $s1 CONST Maximum size of string - STRSIZE
-# $s2 CONST Input Base - INBASE 
+# $s2 CONST Input Base - INBASE
+# $s3 CONST Output Base - OUTBASE
 # $t0 Cumulative sum - cumulativeSum
-# $t1 Exponent - exponent
+# $t1 Address of decimal in string form - deciString
 #
 #
 # 
@@ -39,13 +40,16 @@
 	outputStatement:
 		.asciiz "Decimal value: "
 	
+	outputDecimal:
+		.space 10 #Largest expected value is 4294967295 (FFFFFFFF); 10 digits long
+	
 	.text #Assembly instructions component
 main: #Start of code
 	#variables intialized
 	li $s0, 10 #CONST NULL = 10
 	li $s1, 8 #CONST STRSIZE = 8
 	li $s2, 16 #CONST INBASE = 16
-	
+	li $s3, 10 #CONST OUTBASE = 10
 input:
 	la $a0, inputPrompt #Set output source to newLine
 	li $v0, 4 #Output String code loaded
@@ -64,6 +68,11 @@ decimalConversion:
 	jal CalcuateDecimal
 	add $t0, $v0, $zero
 	
+stringConversion:
+	add $a0, $t0, $zero
+	jal ConvertDecimalToString
+	add $t1, $v0, $zero
+	
 output:
 	la $a0, newLine #Set output source to newLine
 	li $v0, 4 #Output String code loaded
@@ -71,9 +80,9 @@ output:
 	la $a0, outputStatement #Set output source to outputStatement
 	li $v0, 4 #Output String code loaded
 	syscall	#Output string
-	add $a0, $t0, $zero #Set output source to cumulativeSum
-	li $v0, 1 #Output Integer code loaded
-	syscall	#Output integer
+	add $a0, $t1, $zero #Set output source to cumulativeSum
+	li $v0, 4 #Output Unsigned Integer code loaded
+	syscall	#Output signed integer
 	
 exit:
 	li $v0, 10 #Exit code loaded
@@ -148,7 +157,7 @@ CheckData:
 		add $v0, $t4, $zero #load status into return value, v0
 		jr $ra #end of function
 
-# CHECKDATA
+# CALCULATEDECIMAL
 # $a0 Starting address of string - argument1
 # $t0 Current digit address - curAdd
 # $t1 Current digit - curDigit
@@ -159,7 +168,7 @@ CheckData:
 # $t6 Digit decimal value - digiVal
 # $t7 Cumulative sum - cumulativeSum
 # $t8 Temp const holder - tempConstHolder
-# $v0 $t3, Invalid number flag - returnVar1		
+# $v0 $t7, cumulative sum - returnVar1
 
 CalcuateDecimal:
 	add $t0, $a0, $zero #sets digit address to leftmost slot
@@ -219,3 +228,36 @@ CalcuateDecimal:
 		addDecimalDigitsLoopEnd:
 			add $v0, $t7, $zero
 			jr $ra #end of function
+		
+
+# CONVERTDECIMALTOSTRING
+# $a0 Decimal to convert
+# $a1 Size of decimal
+# $t0 $a0, Decimal to convert - deciVal
+# $t1 Destination string of converted decimal - deciString
+# $t2 deciVal mod 10 - modResult
+# $t3 
+# $t4 Multiplier - multiplier
+# $t5 Tracks maximum exponent of current digit - expMax
+# $t6 Digit decimal value - digiVal
+# $t7 Cumulative sum - cumulativeSum
+# $t8 Temp const holder - tempConstHolder
+# $v0 Destination string of converted decimal - returnVar1		
+		
+ConvertDecimalToString:
+	add $t0, $a0, $zero
+	la $t1, outputDecimal
+	addi $t1, $t1, 10 #shift attention to the end of the string
+	addi $t1, $t1, -1
+	add $t2, $s0, $zero
+	addToString:
+		divu $t0, $s3
+		mfhi $t2
+		mflo $t0
+		addi $t2, $t2, 48 #raise value so that 0 = "0"
+		sb $t2, 0($t1)
+		addi $t1, $t1, -1
+		bne $t0, $zero, addToString
+	addi $t1, $t1, 1
+	add $v0, $t1, $zero
+	jr $ra #end of function
