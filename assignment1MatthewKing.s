@@ -44,6 +44,7 @@ main: #Start of code
 	#variables intialized
 	li $s0, 10 #CONST NULL = 10
 	li $s1, 8 #CONST STRSIZE = 8
+	li $s2, 16 #CONST INBASE = 16
 	
 input:
 	la $a0, inputPrompt #Set output source to newLine
@@ -154,9 +155,10 @@ CheckData:
 # $t2 Digit counter - digitCount
 # $t3 Exponent progress tracker - expCounter
 # $t4 Multiplier - multiplier
-# $t5 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# $t5 Tracks maximum exponent of current digit - expMax
 # $t6 Digit decimal value - digiVal
-# $t7 Cumulative sum -cumulativeSum
+# $t7 Cumulative sum - cumulativeSum
+# $t8 Temp const holder - tempConstHolder
 # $v0 $t3, Invalid number flag - returnVar1		
 
 CalcuateDecimal:
@@ -176,13 +178,36 @@ CalcuateDecimal:
 		lb $t1, 0($t0) #loads new digit; loads 10 if empty string
 	
 		li $t7, 0 #cumulativeSum = 0
-		addi $t3, $t2, -1 #starts expCounter at maximum exponent (n-1)
+		addi $t5, $t2, -1 #starts expMax at maximum exponent (n-1)
 		beq $t1, $s0, addDecimalDigitsLoopEnd #skips process and returns 0 if input is empty string
 		addDecimalDigitsLoop:
 			li $t3, 0 #expCounter = 0
 			li $t4, 1 #multiplier = 1
-			
-			
+			multiplierLoop:
+				beq $t3, $t5, multiplierLoopEnd #execute until the multiplier is multiplied by 16^expMax
+				mult $t4, $s2 #multiply by 16 (effectively raise by a power)
+				mflo $t4 #load result of multiplier * 16
+				addi $t3, $t3, 1 #increment exponent counter
+				j multiplierLoop
+			multiplierLoopEnd:
+				mult $t4, $t1 #multiplier * digit value
+				mflo $t6 #loads result of multiplier * digit value
+				
+				
+					la $a0, newLine #Set output source to newLine
+					li $v0, 4 #Output String code loaded
+					syscall	#Output string
+					add $a0, $t4, $zero #Set output source to newLine
+					li $v0, 1 #Output String code loaded
+					syscall	#Output string
+				
+				add $t7, $t7, $t6 #adds digit decimal value to cumulativeSum
+				addi $t5, $t5, -1 #lowers expMax ceiling
+				li $t8, -1 #loads lowest expMax case
+				beq $t8, $t5, addDecimalDigitsLoopEnd #exits if expMax drops below 0
+				addi $t0, $t0, 1 #shifts attention to next digit
+				lb $t1, 0($t0) #loads next digit
+				j addDecimalDigitsLoop
 		addDecimalDigitsLoopEnd:
 			add $v0, $t7, $zero
 			jr $ra #end of function
