@@ -33,6 +33,8 @@ Values shorter than 8 are left-aligned meaning you will have to make exponent in
 
 STRING ENDS WITH 10 SINCE 10 = NULL
 
+CURRENT VERSION DOES NOT WORK FOR NUMBERS ABOVE 7FFFFFFF
+
 VALIDITY CHECK CODE
 if(curDigit > NULL)
 	if(curDigit > 47) //is at least 0
@@ -80,9 +82,63 @@ AddDecimalToSum:
 	exponent = digitCount - 1
 	while(digitCount > 0)
 	{
-		sum = digit * (BASE ^ exponent)
+		expCounter = 0
+		multiplier = 1
+		while(expCounter != exponent)
+		{
+			multiplier *= 16
+			expCounter++
+		}
+		sum = digit * multiplier
 		cumulativeSum += sum
 		//shift digit focus right
 		exponent -= 1
 		digitCount -= 1
 	}
+----------------------------------------
+CalcuateDecimal:
+	add $t0, $a0, $zero #sets digit address to leftmost slot
+	li $t2, 0 #initializes digit counter to zero
+	
+	totalDigitsLoop:
+		lb $t1, 0($t0) #loads new digit 
+		beq $t1, $s0, AddDecimalToSum #If the value is null
+		beq $t2, $s1, AddDecimalToSum #If counter = max string size
+		addi $t0, $t0, 1 #shifts attention to next digit
+		addi $t2, $t2, 1 #increment digit counter
+		
+		j totalDigitsLoop
+	AddDecimalToSum:
+		li $t7, 0 #cumulativeSum = 0
+		add $t5, $t2, $zero #records max exponent
+		sub $t0, $t0, $t5 #shifts attention to first digit address
+		decimalToSumLoop:
+			li $t3, 0 #expCounter = 0
+			li $t4, 1 #multiplier = 1
+			addi $t5, $t5, -1 #exponent = exponent - 1 for each digit down the line
+			addi $t2, $t2, -1 #add 1 to the digit count
+			multiplierLoop:
+				beq $t3, $t5, multiplierLoopEnd #end when 16 is raised to the <exponent>
+				mult $t4, $s2 #raise 16 by 1 power
+				mflo $t4 #load result of previous multiplication
+				addi $t3, $t3, 1 #increment expCounter
+				
+				add $a0, $t4, $zero #Set output source to 
+				li $v0, 1 #Output Integer code loaded
+				syscall	#Output integer
+				
+				j multiplierLoop #repeat loop
+			multiplierLoopEnd:
+				lb $t1, 0($t0) #loads new digit
+				mult $t4, $t1 #multiplier * curDigit
+				mflo $t6 #load result of previous multiplication
+				add $t7, $t7, $t6 #adds digit decimal value to cumulativeSum
+				addi $t5, $t5, -1 #lowers exponent because next digit is of 1 less power
+				addi $t0, $t0, 1 #shifts attention to next digit
+				
+				
+				
+				bne $t2, $zero, decimalToSumLoop #repeat while at least 1 digit remains
+		decimalToSumLoopEnd:
+			add $v0, $t7, $zero
+			jr $ra #end of function
