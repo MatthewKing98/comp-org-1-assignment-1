@@ -31,9 +31,10 @@ Cycle for each character.
 Must accound for values < 8 characters long
 Values shorter than 8 are left-aligned meaning you will have to make exponent inc. only when it meets a non-NULL value (AKA)
 
+STRING ENDS WITH 10 SINCE 10 = NULL
 
 VALIDITY CHECK CODE
-if(curDigit != NULL)
+if(curDigit > NULL)
 	if(curDigit > 47) //is at least 0
 	{
 		if(58 > curDigit) //is at most 9
@@ -50,7 +51,7 @@ if(curDigit != NULL)
 				}
 				if(curDigit > 97) least a
 				{
-					if(123 > curDigit)//at most z
+					if(102 > curDigit)//at most f
 					{
 						invalFlag = False
 					}
@@ -73,4 +74,15 @@ if(curDigit != NULL)
 	else
 	{
 		invalFlag = True
+	}
+	
+AddDecimalToSum:
+	exponent = digitCount - 1
+	while(digitCount > 0)
+	{
+		sum = digit * (BASE ^ exponent)
+		cumulativeSum += sum
+		//shift digit focus right
+		exponent -= 1
+		digitCount -= 1
 	}
