@@ -96,18 +96,26 @@ CheckData:
 			li $v0, 4 #Output String code loaded
 			syscall	#Output string
 			numberTest:
-				li $t5, 47 #set curLim to "0"
+				li $t5, 47 #set curLim to "0" - 1
 				slt $t3, $t1, $t5 #return 1 if digit is less than "0"
 				bne $t3, $zero, AddToInvalFlag
-				li $t5, 58 #set curLim to "9"
+				li $t5, 57 #set curLim to "9"
 				slt $t3, $t5, $t1 #return 1 if "9" is less than digit
 				beq $t3, $zero, AddToInvalFlag #digit is between "0" and "9"
 			
-			lowerCaseTest:
-				li $t5, 64 #set curLim to "A"
+			upperCaseTest:
+				li $t5, 64 #set curLim to "A" - 1
 				slt $t3, $t1, $t5 #return 1 if digit is less than "A"
 				bne $t3, $zero, AddToInvalFlag
-				li $t5, 71 #set curLim to "F"
+				li $t5, 70 #set curLim to "F"
+				slt $t3, $t5, $t1 #return 1 if "F" is less than digit
+				beq $t3, $zero, AddToInvalFlag
+				
+			lowerCaseTest:
+				li $t5, 96 #set curLim to "a" - 1
+				slt $t3, $t1, $t5 #return 1 if digit is less than "A"
+				bne $t3, $zero, AddToInvalFlag
+				li $t5, 102 #set curLim to "f"
 				slt $t3, $t5, $t1 #return 1 if "F" is less than digit
 				beq $t3, $zero, AddToInvalFlag
 			
