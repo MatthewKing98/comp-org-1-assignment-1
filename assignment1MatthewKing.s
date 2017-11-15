@@ -26,7 +26,7 @@
 #####################################################
 # MODULE: main                                      #
 # PURPOSE: Initial driver for code                  #
-# $s0 CONST End of string - NULL                    #
+# $s0 CONST End of string - END                     #
 # $s1 CONST Maximum size of string - STRSIZE        #
 # $s2 CONST Input Base - INBASE                     #
 # $s3 CONST Output Base - OUTBASE                   #
@@ -36,7 +36,7 @@
 	.text #Assembly instructions component
 main: #Start of code
 	#variables intialized
-	li $s0, 10 #CONST NULL = 10
+	li $s0, 10 #CONST END = 10
 	li $s1, 8 #CONST STRSIZE = 8
 	li $s2, 16 #CONST INBASE = 16
 	li $s3, 10 #CONST OUTBASE = 10
@@ -103,7 +103,7 @@ CheckData:
 	checkDataLoop:
 		lb $t1, 0($t0) #loads new digit 
 		beq $t1, $s0, CheckDataEnd #If the value is End-of-String, exit loop
-		ifNotNull: #if(curDigit != NULL)
+		ifNotEnd: #if(curDigit != END)
 			#is the digit a number
 			li $t5, 47 #set curLim to "0" - 1
 			slt $t3, $t1, $t5 #return 1 if digit is less than "0"
@@ -160,7 +160,7 @@ CalcuateDecimal:
 	
 	totalDigitsLoop:
 		lb $t1, 0($t0) #loads new digit 
-		beq $t1, $s0, totalDigitsLoopEnd #If the value is null
+		beq $t1, $s0, totalDigitsLoopEnd #If the value is END
 		beq $t2, $s1, totalDigitsLoopEnd #If counter = max string size
 		addi $t0, $t0, 1 #shifts attention to next digit
 		addi $t2, $t2, 1 #increment digit counter
