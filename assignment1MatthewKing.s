@@ -9,7 +9,7 @@
 
 	.data #Data declaration component
 	userInput: #location were valid entry is stored
-		.space 8 #8 bytes, 1 byte per possible character; Space is maximum size
+		.space 9 #8 bytes, 1 byte per possible character; Space is maximum size
 	
 	inputErrorText: #error message for invalid user input
 		.asciiz "Invalid hexadecimal number."
@@ -27,6 +27,7 @@
 # $s1 CONST Maximum size of string - STRSIZE        #
 # $s2 CONST Input Base - INBASE                     #
 # $s3 CONST Output Base - OUTBASE                   #
+# $s4 CONST Space - SPACE
 # $t0 Cumulative sum - cumulativeSum                #
 # $t1 Address of decimal in string form - deciString#
 #####################################################
@@ -37,6 +38,7 @@ main: #Start of code
 	li $s1, 8 #CONST STRSIZE = 8
 	li $s2, 16 #CONST INBASE = 16
 	li $s3, 10 #CONST OUTBASE = 10
+	li $s4, 32 #CONST SPACE = 32
 input:
 	li $a1, 9 #Specify max size for read string read characters = ($a1 - 1) = 8 max
 	la $a0, userInput #Set destination for read string
@@ -48,7 +50,7 @@ validityCheck:
 	bne $v0, $zero, inputError #if input is invalid, go to inputError
 
 decimalConversion:
-	la $a0, userInput #pass the user's input as an argument
+	add $a0, $v1, $zero #pass the string's starting position as an argument
 	jal CalcuateDecimal #convert the code to a decimal value
 	add $t0, $v0, $zero #load the returned cumulative sum into $t0
 	
@@ -85,12 +87,86 @@ inputError:
 # $t5 Current ascii limit - curLim                  #
 # $v0 $t3, Invalid number flag - returnVar1         #
 #####################################################
+#####################################################
+# MODULE: CheckData                                 #
+# PURPOSE: Check if entered code is valid           #
+# $a0 Starting address of string - argument1        #
+# $t0 Current digit address - curAdd                #
+# $t1 Current digit - curDigit                      #
+# $t2 Digit counter - digitCount                    #
+# $t3 Current digit invalid flag - digiInvalFlag    #
+# $t4 Invalid number flag - invalFlag               #
+# $t5 Current ascii limit - curLim                  #
+#$t6 testCode
+#$t7 startingNum
+#$t8 numberCode
+# $v0 $t3, Invalid number flag - returnVar1         #
+# $v1 $t7, Starting number - returnVar2				#
+#####################################################
 	
 CheckData:
-	add $t0, $a0, $zero #sets digit address to leftmost slot
-	li $t2, 0 #initializes digit counter to zero
-	li $t4, 0 #initializes invalFlag to zero
-	li $t3, 0 #initializes digiInvalFlag to zero
+	add $t7, $a0, $zero #sets digit address to leftmost slot
+	add $t0, $t7, $zero
+	li $t8, 0 #starts number status as blank
+	findSpaces:
+		lb $t1, 0($t0) #loads new digit
+		
+		beq $t1, $s0, doneSpaces
+		beq $t1, $zero, doneSpaces
+		bne $t1, $s4, isNotSpace #if the read character is not a space
+		isSpace:
+			li $t6, 0 #load blank
+			beq $t6, $t8, wasBlankAddSpace #branch if previously unset
+			li $t6, 1 #load number
+			beq $t6, $t8, wasNumAddSpace #branch if previously just number
+			li $t6, 2 #load space
+			beq $t6, $t8, wasSpaceAddSpace #branch if previously just space
+			li $t6, 3 #load numAndSpace
+			beq $t6, $t8, wasNumAndSpaceAddSpace #branch if previously just space
+			
+		isNotSpace:
+			li $t6, 0 #load blank
+			beq $t6, $t8, wasBlankAddNum #branch if previously unset
+			li $t6, 1 #load number
+			beq $t6, $t8, wasNumAddNum #branch if previously just number
+			li $t6, 2 #load space
+			beq $t6, $t8, wasSpaceAddNum #branch if previously just space
+			li $t6, 3 #load numAndSpace
+			beq $t6, $t8, wasNumAndSpaceAddNum #branch if previously just space
+			
+		wasBlankAddSpace:
+			li $t8, 2 #blank -> space
+			j nextNo
+		wasNumAddSpace:
+			li $t8 3 #num -> numAndSpace
+			j nextNo
+		wasSpaceAddSpace:
+			j nextNo
+		wasNumAndSpaceAddSpace:
+			j nextNo
+			
+		wasBlankAddNum:
+			li $t8, 1 #blank -> num
+			j nextNo
+		wasNumAddNum:
+			j nextNo
+		wasSpaceAddNum:
+			li $t8, 1 #blank -> num
+			add $t7, $t0, $zero #record starting address of actual number
+			j nextNo
+		wasNumAndSpaceAddNum:
+			li $t4, 1
+			add $a0, $t4, $zero #Set output source to cumulativeSum
+			li $v0, 1 #Output String code loaded
+			syscall	#Output unsigned cumulative sum as a string
+			j CheckDataEnd
+		
+		nextNo:
+			addi $t0, $t0, 1
+			j findSpaces
+	doneSpaces:
+	sb $s0, 0($t0)
+	add $t0, $t7, $zero
 	checkDataLoop:
 		lb $t1, 0($t0) #loads new digit 
 		beq $t1, $s0, IsEmpty #If the value is End-of-String, check to see if the string is empty
@@ -129,8 +205,9 @@ CheckData:
 		li $t4, 1 #mark as invalid if empty
 	CheckDataEnd:	
 		add $v0, $t4, $zero #load status into return register, $v0
+		add $v1, $t7, $zero #load starting postion into return register, $v1
 		jr $ra #end of function
-
+	
 #####################################################
 # MODULE: CalcuateDecimal                           #
 # PURPOSE: Converts Hex code to a decimal number    #
