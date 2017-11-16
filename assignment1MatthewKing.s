@@ -10,15 +10,12 @@
 	.data #Data declaration component
 	userInput: #location were valid entry is stored
 		.space 8 #8 bytes, 1 byte per possible character; Space is maximum size
-		
-	inputPrompt: #prompt to request valid number
-		.asciiz "\n>> Please enter a hexadecimal number [0-9, A-F, or a-f ONLY]:\n"
 	
 	inputErrorText: #error message for invalid user input
-		.asciiz "\n\n>> Invalid entry [0-9, A-F, or a-f ONLY]\n\n"
+		.asciiz "Invalid hexadecimal number."
 		
 	outputStatement: #statement preceeding the program output
-		.asciiz "\n>> Decimal value: "
+		.asciiz "\n"
 	
 	outputDecimal: #string version of number (stored here because the 32 bit register represents 2s compliment vs unsigned)
 		.space 10 #Largest expected value is 4294967295 (FFFFFFFF); 10 digits long
@@ -41,9 +38,6 @@ main: #Start of code
 	li $s2, 16 #CONST INBASE = 16
 	li $s3, 10 #CONST OUTBASE = 10
 input:
-	la $a0, inputPrompt #Set output source to input prompt
-	li $v0, 4 #Output String code loaded
-	syscall	#request for user input
 	li $a1, 9 #Specify max size for read string read characters = ($a1 - 1) = 8 max
 	la $a0, userInput #Set destination for read string
 	li $v0, 8 #Read String code loaded
@@ -64,9 +58,6 @@ stringConversion:
 	add $t1, $v0, $zero #load the returned cumulative sum address into $t1
 	
 output:
-	la $a0, outputStatement #Set output source to output statement
-	li $v0, 4 #Output String code loaded
-	syscall	#Print preceeding message before the decimal value
 	add $a0, $t1, $zero #Set output source to cumulativeSum
 	li $v0, 4 #Output String code loaded
 	syscall	#Output unsigned cumulative sum as a string
