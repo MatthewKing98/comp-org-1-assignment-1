@@ -9,7 +9,7 @@
 
 	.data #Data declaration component
 	userInput: #location were valid entry is stored
-		.space 9 #8 bytes, 1 byte per possible character; Space is maximum size
+		.space 9 #9 bytes, 1 byte per possible character, and an end-of-string marker; Space is maximum size
 	
 	inputErrorText: #error message for invalid user input
 		.asciiz "Invalid hexadecimal number."
@@ -74,7 +74,8 @@ inputError:
 	syscall	#Inform the user if invalid code entry
 	j input #loop back to ask user for valid input
 	
-
+	
+	
 #####################################################
 # MODULE: CheckData                                 #
 # PURPOSE: Check if entered code is valid           #
@@ -85,34 +86,29 @@ inputError:
 # $t3 Current digit invalid flag - digiInvalFlag    #
 # $t4 Invalid number flag - invalFlag               #
 # $t5 Current ascii limit - curLim                  #
+# $t6 Value to compare char against - strCode       #
+# $t7 Holds address of first digit - numStart       #                             
+# $t8 Represents the string's pattern - strCode     #
 # $v0 $t3, Invalid number flag - returnVar1         #
-#####################################################
-#####################################################
-# MODULE: CheckData                                 #
-# PURPOSE: Check if entered code is valid           #
-# $a0 Starting address of string - argument1        #
-# $t0 Current digit address - curAdd                #
-# $t1 Current digit - curDigit                      #
-# $t2 Digit counter - digitCount                    #
-# $t3 Current digit invalid flag - digiInvalFlag    #
-# $t4 Invalid number flag - invalFlag               #
-# $t5 Current ascii limit - curLim                  #
-#$t6 testCode
-#$t7 startingNum
-#$t8 numberCode
-# $v0 $t3, Invalid number flag - returnVar1         #
-# $v1 $t7, Starting number - returnVar2				#
+# $v1 $t7, Starting number - returnVar2	 	    #
+#                                                   #
+# NOTES:                                            #
+# Code used to classify string is as follows:       #
+# 0 - First read (no spaces or numbers)             #
+# 1 - Contains only numbers (non-spaces)            #
+# 2 - Contains only spaces                          #
+# 3 - Contains number(s) followed by a space        #
 #####################################################
 	
 CheckData:
-	add $t7, $a0, $zero #sets digit address to leftmost slot
-	add $t0, $t7, $zero
+	add $t7, $a0, $zero #default first-digit-position to start of string
+	add $t0, $t7, $zero #points intially to start of string
 	li $t8, 0 #starts number status as blank
 	findSpaces:
 		lb $t1, 0($t0) #loads new digit
 		
-		beq $t1, $s0, doneSpaces
-		beq $t1, $zero, doneSpaces
+		beq $t1, $s0, findSpacesEnd   #end process whenever read character is newline
+		beq $t1, $zero, findSpacesEnd #end process whenever read character is NULL
 		bne $t1, $s4, isNotSpace #if the read character is not a space
 		isSpace:
 			li $t6, 0 #load blank
@@ -133,18 +129,20 @@ CheckData:
 			beq $t6, $t8, wasSpaceAddNum #branch if previously just space
 			li $t6, 3 #load numAndSpace
 			beq $t6, $t8, wasNumAndSpaceAddNum #branch if previously just space
-			
+		#string also contains a space
 		wasBlankAddSpace:
 			li $t8, 2 #blank -> space
 			j nextNo
 		wasNumAddSpace:
 			li $t8 3 #num -> numAndSpace
+			sb $s0, 0($t0) #represent end of string with a newline
 			j nextNo
 		wasSpaceAddSpace:
 			j nextNo
 		wasNumAndSpaceAddSpace:
 			j nextNo
 			
+		#string also contains a number
 		wasBlankAddNum:
 			li $t8, 1 #blank -> num
 			j nextNo
@@ -155,18 +153,15 @@ CheckData:
 			add $t7, $t0, $zero #record starting address of actual number
 			j nextNo
 		wasNumAndSpaceAddNum:
-			li $t4, 1
-			add $a0, $t4, $zero #Set output source to cumulativeSum
-			li $v0, 1 #Output String code loaded
-			syscall	#Output unsigned cumulative sum as a string
-			j CheckDataEnd
+			li $t4, 1 #invalid; a space cannot exist between two numbers
+			j CheckDataEnd #no need to check any further once proven invalid
 		
 		nextNo:
-			addi $t0, $t0, 1
-			j findSpaces
-	doneSpaces:
-	sb $s0, 0($t0)
-	add $t0, $t7, $zero
+			addi $t0, $t0, 1 #shift attention to next character
+			j findSpaces #repeats filtering process for next character
+	findSpacesEnd:
+	sb $s0, 0($t0) #mark the end of valid code with the end-of-string value
+	add $t0, $t7, $zero #shift attention back to the first number value in the string
 	checkDataLoop:
 		lb $t1, 0($t0) #loads new digit 
 		beq $t1, $s0, IsEmpty #If the value is End-of-String, check to see if the string is empty
