@@ -93,7 +93,7 @@ CheckData:
 	li $t3, 0 #initializes digiInvalFlag to zero
 	checkDataLoop:
 		lb $t1, 0($t0) #loads new digit 
-		beq $t1, $s0, CheckDataEnd #If the value is End-of-String, exit loop
+		beq $t1, $s0, IsEmpty #If the value is End-of-String, check to see if the string is empty
 		ifNotEnd: #if(curDigit != END)
 			#is the digit a number
 			li $t5, 47 #set curLim to "0" - 1
@@ -124,7 +124,9 @@ CheckData:
 		addi $t0, $t0, 1 #shifts attention to next digit
 		addi $t2, $t2, 1 #increment digit counter
 		bne $s1, $t2, checkDataLoop #while digitCount != STRSIZE
-	
+	IsEmpty:
+		bne $t2, $zero, CheckDataEnd #do not mark the flag if the string has at least 1 member
+		li $t4, 1 #mark as invalid if empty
 	CheckDataEnd:	
 		add $v0, $t4, $zero #load status into return register, $v0
 		jr $ra #end of function
