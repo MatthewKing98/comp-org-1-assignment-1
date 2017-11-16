@@ -27,7 +27,7 @@
 # $s1 CONST Maximum size of string - STRSIZE        #
 # $s2 CONST Input Base - INBASE                     #
 # $s3 CONST Output Base - OUTBASE                   #
-# $s4 CONST Space - SPACE
+# $s4 CONST Space - SPACE                           #
 # $t0 Cumulative sum - cumulativeSum                #
 # $t1 Address of decimal in string form - deciString#
 #####################################################
@@ -87,7 +87,7 @@ inputError:
 # $t4 Invalid number flag - invalFlag               #
 # $t5 Current ascii limit - curLim                  #
 # $t6 Value to compare char against - strCode       #
-# $t7 Holds address of first digit - numStart       #                             
+# $t7 Holds address of first digit - numStart       #
 # $t8 Represents the string's pattern - strCode     #
 # $v0 $t3, Invalid number flag - returnVar1         #
 # $v1 $t7, Starting number - returnVar2	 	    #
